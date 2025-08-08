@@ -1,5 +1,0 @@
-pandas
-openpyxl
-langchain_google_genai
-langchain_experimental
-tabulate
