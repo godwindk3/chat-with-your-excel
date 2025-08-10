@@ -39,3 +39,4 @@ agent = create_pandas_dataframe_agent(
 
 response = agent.invoke("Số lượng hàng vận chuyển xuất bán trong tháng 6 là bao nhiêu?")
 print(response["output"])
+
