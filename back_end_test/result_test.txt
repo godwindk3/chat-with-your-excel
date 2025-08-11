@@ -1,0 +1,120 @@
+- Câu 1: Top 5 nhà vận tải có số chuyến xuất bán nhiều nhất 
+* Pandas thông thường: 
+(Sheet Đơn hàng vận chuyển):
+Tên nhà vận tải
+VINAFCO        3635      
+TRI PHA        3405      
+IFB            2321      
+THANH DAT      1232      
+TÂN AN PHÁT    1100 
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Tên nhà vận tải
+TRI PHA      249
+TOAN CAU     134
+DIEMLOAN     104
+VINAFCO       81
+THANH DAT     76
+
+* Pandas agent:
+(Sheet Đơn hàng vận chuyển):
+Top 5 nhà vận tải có số chuyến vận chuyển xuất bán nhiều nhất là:
+1. VINAFCO: 3635 chuyến
+2. TRI PHA: 3405 chuyến
+3. IFB: 2321 chuyến
+4. THANH DAT: 1232 chuyến
+5. TÂN AN PHÁT: 1100 chuyến
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Top 5 nhà vận tải có số chuyến vận chuyển xuất bán nhiều nhất là:
+1. TRI PHA: 249 chuyến
+2. TOAN CAU: 134 chuyến
+3. DIEMLOAN: 104 chuyến
+4. VINAFCO: 81 chuyến
+5. THANH DAT: 76 chuyến
+
+
+- Câu 2: Số lượng hàng vận chuyển xuất bán trong tháng 6 là bao nhiêu?
+* Pandas thông thường:
+(Sheet Đơn hàng vận chuyển):
+Tổng số lượng hàng xuất bán trong tháng 6: 19131099
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ): 
+Tổng số lượng hàng xuất bán trong tháng 6: 5345215
+
+* Pandas agent:
+(Sheet Đơn hàng vận chuyển):
+Tổng số lượng hàng vận chuyển xuất bán trong tháng 6 là 19,131,099 đơn vị.
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ): 
+Số lượng hàng vận chuyển xuất bán trong tháng 6 là 5,345,215.
+
+
+- Câu 3: Mặt hàng nào có lượng xuất bán cao nhất?
+* Pandas thông thường:
+(Sheet Đơn hàng vận chuyển):
+ Đường tinh luyện cao cấp Biên Hòa Pure (6277250)
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Mặt hàng có lượng xuất bán cao nhất: KTM Blue Refined Sugar (Origin: Indonesia) (5207450)
+
+* Pandas agent:
+(Sheet Đơn hàng vận chuyển):
+Mặt hàng có lượng xuất bán cao nhất là Đường tinh luyện cao cấp Biên Hòa Pure.
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Mặt hàng có lượng xuất bán cao nhất là "KTM Blue Refined Sugar (Origin: Indonesia)".
+
+- Câu 4: Các kho xuất hàng bán chủ yếu trong tháng 6 là các kho nào?
+* Pandas thông thường:
+(Sheet Đơn hàng vận chuyển):
+Kho nhà máy Biên Hòa - BHC                 5053419
+Kho nhà máy Ninh Hòa - NHS                 3513000
+Kho nhà máy GLS - TTCS                     1934800
+Kho nhà máy Tây Ninh - TTCS                1769350
+Kho thuê ngoài THIBIDI - TTCS              1326800
+Kho nhà máy Biên Hòa - TTCS                1217000
+Kho thuê ngoài Đại Sơn - BHC              1212000
+Kho thuê ngoài Triệu Tấn Phát - BHC         854025
+Kho thuê ngoài VINAFCO - BHC               709890
+DC Miền Nam IFB - BHC                       325916
+Kho thuê ngoài Triệu Tấn Phát - TTCS        311400
+Kho thuê ngoài Tây Ninh - TTCS              306850
+Kho thuê ngoài VINAFCO Đà Nẵng - BHC     276031
+Kho thuê ngoài Đại Thành - BHC             130000
+Kho thuê ngoài Hải Phòng - TTCS             122050
+Cửa khẩu Pờ Y - TTCS                         51000
+Kho nhà máy TTCS - BHC                       17568
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Các kho xuất hàng nhiều nhất trong tháng 6:
+Tên điểm lấy
+Kho nhà máy Ninh Hòa - NHS             2257500
+Kho nhà máy Biên Hòa - BHC             1300677
+Cửa khẩu Pờ Y - TTCS                    913000
+Kho nhà máy Biên Hòa - TTCS             459055
+Kho nhà máy GLS - TTCS                  289000
+Kho nhà máy Tây Ninh - TTCS             100000
+DC Miền Nam IFB - BHC                    10800
+Kho thuê ngoài Triệu Tấn Phát - BHC      10000
+Kho thuê ngoài VINAFCO - BHC             5183
+Name: Số lượng thực xuất, dtype: int64
+
+* Pandas agent:
+(Sheet Đơn hàng vận chuyển):
+Các kho xuất hàng bán chủ yếu trong tháng 6 là:
+*   **Kho nhà máy Biên Hòa - BHC** (3040 lượt xuất)
+*   **DC Miền Nam IFB - BHC** (2954 lượt xuất)
+*   **Kho thuê ngoài VINAFCO - BHC** (1885 lượt xuất)
+*   **Kho thuê ngoài VINAFCO Đà Nẵng - BHC** (652 lượt xuất)
+*   **Kho nhà máy Ninh Hòa - NHS** (137 lượt xuất)
+--------------------------------
+(Sheet Đơn hàng vận chuyển nội bộ):
+Các kho xuất hàng bán chủ yếu trong tháng 6 là:
+
+*   **Kho nhà máy Biên Hòa - BHC:** 289 chuyến
+*   **Kho nhà máy Biên Hòa - TTCS:** 126 chuyến
+*   **Kho nhà máy Ninh Hòa - NHS:** 45 chuyến
+*   **Kho thuê ngoài VINAFCO - BHC:** 44 chuyến
+*   **Cửa khẩu Pờ Y - TTCS:** 38 chuyến
+

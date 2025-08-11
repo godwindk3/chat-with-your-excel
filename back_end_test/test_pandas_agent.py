@@ -12,7 +12,7 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 model = ChatGoogleGenerativeAI(model="gemini-2.5-flash",
                                 google_api_key=google_api_key)
 
-df = pd.read_excel("./data/data.xlsx", sheet_name="Đơn hàng vận chuyển")
+df = pd.read_excel("./data/data.xlsx", sheet_name="Đơn hàng vận chuyển nội bộ")
 
 colulm_description = pd.read_excel("./data/data.xlsx", sheet_name="Mô tả trường thông tin")
 
@@ -37,6 +37,6 @@ agent = create_pandas_dataframe_agent(
     suffix="Provide the final answer in a clear and structured format.",
 )
 
-response = agent.invoke("Số lượng hàng vận chuyển xuất bán trong tháng 6 là bao nhiêu?")
+response = agent.invoke("Các kho xuất hàng bán chủ yếu trong tháng 6 là các kho nào?")
 print(response["output"])
 
