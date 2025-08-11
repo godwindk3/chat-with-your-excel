@@ -3,5 +3,6 @@ export type CreateSessionResponse = { sessionId: string; fileId: string; sheetNa
 export type Message = { role: 'user' | 'assistant'; content: string; timestamp: string }
 export type HistoryResponse = { sessionId: string; fileId: string; sheetName: string; messages: Message[] }
 export type SessionSummary = { sessionId: string; fileId: string; sheetName: string; createdAt: string; messagesCount: number; lastMessageAt: string }
+export type FileInfo = { fileId: string; filename: string; size: number; uploadedAt: number }
 
 

@@ -16,6 +16,7 @@ export const RootLayout: React.FC = () => {
           <NavLink className="btn" to="/">Upload</NavLink>
           <NavLink className="btn" to="/chat">Chat</NavLink>
           <NavLink className="btn" to="/sessions">Sessions</NavLink>
+          <NavLink className="btn" to="/files">Files</NavLink>
         </nav>
       </div>
       <Outlet />

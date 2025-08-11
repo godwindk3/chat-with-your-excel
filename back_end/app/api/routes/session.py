@@ -13,6 +13,7 @@ from app.services.session_store import (
     get_session_record,
     append_message,
     list_sessions,
+    delete_session,
 )
 
 
@@ -80,6 +81,15 @@ class SessionSummary(BaseModel):
 @router.get("/sessions", response_model=list[SessionSummary])
 def list_all_sessions(fileId: str | None = None):
     return list_sessions(file_id=fileId)
+
+
+@router.delete("/session/{session_id}")
+def delete_session_endpoint(session_id: str):
+    success = delete_session(session_id)
+    if success:
+        return {"message": "Session deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Session not found")
 
 
 @router.post("/session/{session_id}/ask", response_model=Message)

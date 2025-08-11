@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.api.routes.upload import router as upload_router
 from app.api.routes.analyze import router as analyze_router
 from app.api.routes.session import router as session_router
+from app.api.routes.files import router as files_router
 
 
 def create_app() -> FastAPI:
@@ -21,6 +22,7 @@ def create_app() -> FastAPI:
     app.include_router(upload_router, prefix="/api")
     app.include_router(analyze_router, prefix="/api")
     app.include_router(session_router, prefix="/api")
+    app.include_router(files_router, prefix="/api")
 
     @app.get("/health")
     def health_check():

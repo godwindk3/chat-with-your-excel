@@ -75,3 +75,14 @@ def list_sessions(file_id: Optional[str] = None) -> List[Dict[str, Any]]:
     return sessions
 
 
+def delete_session(session_id: str) -> bool:
+    path = _session_path(session_id)
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+        return False
+    except Exception:
+        return False
+
+

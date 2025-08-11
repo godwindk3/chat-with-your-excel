@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react'
-import { ask, createSession, getHistory, uploadFile, listSessions } from '../../shared/api'
+import { ask, createSession, getHistory, listSessions } from '../../shared/api'
 import type { Message, SessionSummary } from '../../shared/types'
+import { Sidebar } from '../../features/chat/Sidebar'
+import { ChatWindow } from '../../features/chat/ChatWindow'
 
 export const ChatPage: React.FC = () => {
   const [fileId, setFileId] = useState<string | null>(null)
@@ -16,24 +18,7 @@ export const ChatPage: React.FC = () => {
   const canStart = useMemo(() => !!fileId && !!selectedSheet, [fileId, selectedSheet])
   const canSend = useMemo(() => !!sessionId && !!question.trim(), [sessionId, question])
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return
-    setError('')
-    setMessages([])
-    setSessionId(null)
-    try {
-      const res = await uploadFile(e.target.files[0])
-      setFileId(res.fileId)
-      setSheets(res.sheetNames)
-      setSelectedSheet(res.sheetNames[0] || '')
-      const s = await listSessions(res.fileId)
-      setSessions(s)
-    } catch (err: any) {
-      setError(err?.message || 'Upload failed')
-    }
-  }
-
-  const handleStart = async () => {
+  const handleStartSession = async () => {
     if (!canStart) return
     setLoading(true)
     setError('')
@@ -46,10 +31,12 @@ export const ChatPage: React.FC = () => {
       setSessions(await listSessions(s.fileId))
     } catch (err: any) {
       setError(err?.message || 'Start session failed')
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
   }
 
-  const handleSend = async () => {
+  const handleSendMessage = async () => {
     if (!canSend || !sessionId) return
     const q = question.trim()
     setQuestion('')
@@ -62,7 +49,9 @@ export const ChatPage: React.FC = () => {
       setSessions(await listSessions(fileId || undefined))
     } catch (err: any) {
       setError(err?.message || 'Send failed')
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   const handleLoadSession = async (sid: string) => {
@@ -76,75 +65,67 @@ export const ChatPage: React.FC = () => {
       setMessages(h.messages || [])
     } catch (err: any) {
       setError(err?.message || 'Load session failed')
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
+  }
+
+  const handleNewSession = () => {
+    setSessionId(null)
+    setMessages([])
+    setQuestion('')
+    setError('')
+  }
+
+  const handleSessionDeleted = (deletedSessionId: string) => {
+    if (sessionId === deletedSessionId) {
+      handleNewSession()
+    }
+  }
+
+  const handleReset = () => {
+    setFileId(null)
+    setSheets([])
+    setSelectedSheet('')
+    setSessionId(null)
+    setMessages([])
+    setError('')
+    setQuestion('')
   }
 
   return (
     <div className="grid">
-      <div className="card">
-        <div className="sectionTitle">1. Upload</div>
-        <label className="label">Upload Excel (.xlsx/.xls)</label>
-        <input className="fileInput" type="file" accept=".xlsx,.xls" onChange={handleUpload} />
+      <div className="chatLayout">
+        <Sidebar
+          sessions={sessions}
+          setSessions={setSessions}
+          currentSessionId={sessionId}
+          onLoadSession={handleLoadSession}
+          onNewSession={handleNewSession}
+          fileId={fileId}
+          setFileId={setFileId}
+          setSheets={setSheets}
+          setSelectedSheet={setSelectedSheet}
+          setError={setError}
+          onSessionDeleted={handleSessionDeleted}
+        />
+        <ChatWindow
+          fileId={fileId}
+          sheets={sheets}
+          selectedSheet={selectedSheet}
+          setSelectedSheet={setSelectedSheet}
+          sessionId={sessionId}
+          messages={messages}
+          question={question}
+          setQuestion={setQuestion}
+          loading={loading}
+          onStartSession={handleStartSession}
+          onSendMessage={handleSendMessage}
+          onReset={handleReset}
+          canStart={canStart}
+          canSend={canSend}
+        />
       </div>
-
-      <div className="card">
-        <div className="sectionTitle">2. Configure & Start</div>
-        <div className="row">
-          <div>
-            <label className="label">Select sheet</label>
-            <select className="select" value={selectedSheet} onChange={(e) => setSelectedSheet(e.target.value)}>
-              {sheets.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="label">Session</label>
-            <div className="actions">
-              <button className="btn" onClick={() => { setFileId(null); setSheets([]); setSelectedSheet(''); setSessionId(null); setMessages([]); setError(''); }}>Reset</button>
-              <button className="btn btnPrimary" onClick={handleStart} disabled={!canStart || loading}>{loading ? 'Starting…' : (sessionId ? 'Restart' : 'Start')}</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="sectionTitle">Past Sessions</div>
-        <div className="grid">
-          <div className="row" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div className="actions">
-              <button className="btn" onClick={async () => setSessions(await listSessions())}>All</button>
-              <button className="btn" onClick={async () => setSessions(await listSessions(fileId || undefined))}>For current file</button>
-            </div>
-            <div className="fileInfo" style={{ alignSelf: 'end' }}>{sessions.length} found</div>
-          </div>
-          {sessions.map((s) => (
-            <div key={s.sessionId} className="actions" style={{ justifyContent: 'space-between' }}>
-              <div>
-                <div>{s.sheetName}</div>
-                <div className="footerNote">{new Date(s.createdAt).toLocaleString()} • {s.messagesCount} msgs</div>
-              </div>
-              <div>
-                <button className="btn" onClick={() => handleLoadSession(s.sessionId)}>Load</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <div className="sectionTitle">3. Chat</div>
-        <div className="chat">
-          {messages.map((m, idx) => (
-            <div key={idx} className={`messageRow ${m.role}`}>
-              <div className={`bubble ${m.role}`}>{m.content}</div>
-            </div>
-          ))}
-        </div>
-        <div className="chatInputRow">
-          <input className="input" placeholder={sessionId ? 'Type your question…' : 'Start session first'} value={question} onChange={(e) => setQuestion(e.target.value)} disabled={!sessionId || loading} />
-          <button className="btn btnPrimary" onClick={handleSend} disabled={!canSend || loading}>{loading ? 'Sending…' : 'Send'}</button>
-        </div>
-      </div>
-
       {error && <div className="card alert alertError">{error}</div>}
     </div>
   )
