@@ -63,8 +63,16 @@ def get_file_info(file_id: str):
 
 @router.delete("/files/{file_id}")
 def delete_file(file_id: str):
-    success = delete_file_by_id(file_id)
-    if success:
-        return {"message": "File deleted successfully"}
-    else:
-        raise HTTPException(status_code=404, detail="File not found")
+    import time
+    
+    # Retry logic for race condition with recent uploads
+    for attempt in range(3):
+        success = delete_file_by_id(file_id)
+        if success:
+            return {"message": "File deleted successfully"}
+        
+        # Short delay before retry (only for first 2 attempts)
+        if attempt < 2:
+            time.sleep(0.1)  # 100ms delay
+    
+    raise HTTPException(status_code=404, detail="File not found")

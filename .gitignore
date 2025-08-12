@@ -2,3 +2,4 @@
 .env
 node_modules/
 storage/
+__pycache__/

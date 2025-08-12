@@ -23,11 +23,18 @@ async def upload_excel(file: UploadFile = File(...)) -> dict:
     with open(saved_path, "wb") as f:
         content = await file.read()
         f.write(content)
+        f.flush()  # Ensure data is written to disk
+        os.fsync(f.fileno())  # Force OS to write to storage
 
+    # Verify file exists and is accessible
+    if not os.path.exists(saved_path):
+        raise HTTPException(status_code=500, detail="File save verification failed")
+    
     # Read sheet names
     try:
         xls = pd.ExcelFile(saved_path)
         sheet_names: List[str] = xls.sheet_names
+        xls.close()  # Explicitly close to release file handle
     except Exception as e:
         # Cleanup invalid file
         try:
