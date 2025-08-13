@@ -3,7 +3,6 @@ import pandas as pd
 # ====== Cấu hình ======
 input_file = "./data/data.xlsx"   # File Excel gốc
 output_file = "./data/data_clean.xlsx"  # File Excel đã làm sạch
-sheets_to_clean = ["Đơn hàng vận chuyển", "Đơn hàng vận chuyển nội bộ"]
 # ======================
 
 # Hàm chuẩn hóa một sheet
@@ -34,9 +33,7 @@ def clean_sheet(df):
     # 4. Chuẩn hóa cột số liệu về numeric
     numeric_candidates = [
         col for col in df.columns
-        if any(keyword in col.lower() for keyword in [
-            "tấn", "khối", "số lượng"
-        ])
+        if any(keyword in col.lower() for keyword in ["tấn", "khối", "số lượng"])
     ]
     for col in numeric_candidates:
         if col in df.columns:
@@ -44,18 +41,15 @@ def clean_sheet(df):
 
     return df
 
-# Đọc file Excel
+# Đọc toàn bộ sheet
 all_sheets = pd.read_excel(input_file, sheet_name=None)
 
-# Làm sạch 2 sheet được chọn
-cleaned_sheets = {}
-for sheet in sheets_to_clean:
-    if sheet in all_sheets:
-        cleaned_sheets[sheet] = clean_sheet(all_sheets[sheet])
+# Làm sạch toàn bộ sheet
+cleaned_sheets = {name: clean_sheet(df) for name, df in all_sheets.items()}
 
-# Xuất file Excel mới
+# Xuất toàn bộ sheet ra file mới
 with pd.ExcelWriter(output_file) as writer:
     for name, df in cleaned_sheets.items():
         df.to_excel(writer, sheet_name=name, index=False)
 
-print(f"✅ Đã xuất file '{output_file}' với 2 sheet đã chuẩn hóa.")
+print(f"✅ Đã xuất file '{output_file}' với toàn bộ sheet đã chuẩn hóa.")

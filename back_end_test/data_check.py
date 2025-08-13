@@ -1,12 +1,8 @@
 import pandas as pd
 
-def analyze_excel(file_path, sheet_name=None):
-    # Nếu sheet_name=None → đọc tất cả sheet
-    sheets = pd.read_excel(file_path, sheet_name=sheet_name)
-
-    # Nếu chỉ định 1 sheet, biến thành dict để xử lý chung
-    if isinstance(sheets, pd.DataFrame):
-        sheets = {sheet_name if sheet_name else 'Sheet1': sheets}
+def analyze_excel(file_path):
+    # Luôn đọc tất cả các sheet
+    sheets = pd.read_excel(file_path, sheet_name=None)
 
     for name, df in sheets.items():
         print(f"\n📄 Đang phân tích sheet: {name}")
@@ -39,6 +35,4 @@ def analyze_excel(file_path, sheet_name=None):
 
 # ======= Chạy thử =======
 file_path = "./data/data_clean.xlsx"  # Đường dẫn tới file của bạn
-# sheet_name = None  # Quét tất cả sheet
-sheet_name = "Đơn hàng vận chuyển nội bộ"  # Hoặc chọn 1 sheet
-analyze_excel(file_path, sheet_name)
+analyze_excel(file_path)
