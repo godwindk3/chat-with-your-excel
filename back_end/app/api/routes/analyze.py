@@ -30,7 +30,7 @@ def build_agent_for_file(file_path: str, sheet_name: str):
     load_dotenv()  # load GOOGLE_API_KEY if present
     google_api_key = settings.google_api_key or os.getenv("GOOGLE_API_KEY")
     if not google_api_key:
-        raise HTTPException(status_code=500, detail="GOOGLE_API_KEY is not configured")
+        raise HTTPException(status_code=500, detail="GOOGLE_API_KEY is not configured. Please contact administrator.")
 
     # Read target sheet
     try:
@@ -73,17 +73,43 @@ def build_agent_for_file(file_path: str, sheet_name: str):
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest):
+    import time
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
     file_path = find_file_by_id(req.fileId)
     if not file_path:
         raise HTTPException(status_code=404, detail="File not found")
 
     agent = build_agent_for_file(file_path, req.sheetName)
-    try:
-        response = agent.invoke(req.question)
-        output = response.get("output") if isinstance(response, dict) else str(response)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
-
-    return AnalyzeResponse(output=output)
+    
+    # Retry logic for quota exceeded errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = agent.invoke(req.question)
+            output = response.get("output") if isinstance(response, dict) else str(response)
+            return AnalyzeResponse(output=output)
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # Check if it's a quota/rate limit error
+            if "quota" in error_msg or "429" in error_msg or "resourceexhausted" in error_msg:
+                if attempt < max_retries - 1:
+                    wait_time = 10 * (attempt + 1)  # 10s, 20s, 30s
+                    logger.warning(f"Quota exceeded, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    raise HTTPException(
+                        status_code=429, 
+                        detail="Google API quota exceeded. Please wait a minute and try again, or upgrade your API plan."
+                    )
+            else:
+                # Other errors, don't retry
+                raise HTTPException(status_code=500, detail=f"Analysis failed: {e}. Please try again.")
+    
+    raise HTTPException(status_code=500, detail="Analysis failed after retries. Please try again later.")
 
 

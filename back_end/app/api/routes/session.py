@@ -114,7 +114,11 @@ def ask(session_id: str, req: AskRequest):
         response = agent.invoke(req.question)
         output = response.get("output") if isinstance(response, dict) else str(response)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+        error_msg = str(e).lower()
+        if "quota" in error_msg or "429" in error_msg or "resourceexhausted" in error_msg:
+            raise HTTPException(status_code=429, detail="Google API quota exceeded. Please wait a minute and try again.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Analysis failed: {e}. Please try again.")
 
     now2 = datetime.now(timezone.utc).isoformat()
     append_message(session_id, role="assistant", content=output, timestamp=now2)

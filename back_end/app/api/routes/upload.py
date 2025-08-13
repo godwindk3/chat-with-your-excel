@@ -28,7 +28,7 @@ async def upload_excel(file: UploadFile = File(...)) -> dict:
 
     # Verify file exists and is accessible
     if not os.path.exists(saved_path):
-        raise HTTPException(status_code=500, detail="File save verification failed")
+        raise HTTPException(status_code=500, detail="File save verification failed. Please try again.")
     
     # Read sheet names
     try:

@@ -96,7 +96,10 @@ def _maybe_convert_to_datetime(series: pd.Series) -> pd.Series:
     # Heuristics: attempt to parse; accept if sufficient non-null after conversion
     s = series.astype("object")
     try:
-        parsed = pd.to_datetime(s, errors="coerce", dayfirst=True)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            parsed = pd.to_datetime(s, errors="coerce", dayfirst=True)
         if parsed.notna().mean() >= 0.6:  # at least 60% parsable
             return parsed
     except Exception:
