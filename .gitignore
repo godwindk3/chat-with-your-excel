@@ -3,3 +3,4 @@
 node_modules/
 storage/
 __pycache__/
+logs
