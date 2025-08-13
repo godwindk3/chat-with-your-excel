@@ -44,6 +44,25 @@ export const UploadPage: React.FC = () => {
 
   return (
     <div className="grid">
+      <div className="card alert" style={{ 
+        backgroundColor: 'var(--bg-secondary)', 
+        border: '1px solid var(--primary)', 
+        borderRadius: '8px',
+        marginBottom: '16px' 
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <div style={{ color: 'var(--primary)', fontSize: '16px', marginTop: '2px' }}>💡</div>
+          <div>
+            <div style={{ fontWeight: '500', marginBottom: '4px', color: 'var(--primary)' }}>
+              Tips for Better Accuracy
+            </div>
+            <div style={{ fontSize: '14px', lineHeight: '1.4', color: 'var(--text)' }}>
+              Your Excel file should include a sheet named <strong>"Mô tả trường thông tin"</strong> to describe the meaning of data columns. 
+              This sheet will be used to improve the accuracy of analysis results.
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="card">
         <div className="sectionTitle">Select File</div>
         

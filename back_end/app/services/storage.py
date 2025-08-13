@@ -13,6 +13,19 @@ def list_storage_files() -> list[str]:
 
 def find_file_by_id(file_id: str) -> Optional[str]:
     prefix = f"{file_id}_"
+    
+    # Direct approach - check storage directory
+    try:
+        files = os.listdir(settings.storage_dir)
+        for filename in files:
+            if filename.startswith(prefix) and filename.endswith((".xlsx", ".xls")):
+                full_path = os.path.join(settings.storage_dir, filename)
+                if os.path.exists(full_path):
+                    return full_path
+    except Exception:
+        pass
+    
+    # Fallback to original method
     for path in list_storage_files():
         if os.path.basename(path).startswith(prefix):
             return path

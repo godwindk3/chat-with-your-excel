@@ -64,10 +64,20 @@ def get_file_info(file_id: str):
 @router.delete("/files/{file_id}")
 def delete_file(file_id: str):
     import time
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f"Attempting to delete file: {file_id}")
+    
+    # Check if file exists before attempting delete
+    from app.services.storage import find_file_by_id
+    file_path = find_file_by_id(file_id)
+    logger.info(f"File path found: {file_path}")
     
     # Retry logic for race condition with recent uploads
     for attempt in range(3):
         success = delete_file_by_id(file_id)
+        logger.info(f"Delete attempt {attempt + 1}: {success}")
         if success:
             return {"message": "File deleted successfully"}
         
