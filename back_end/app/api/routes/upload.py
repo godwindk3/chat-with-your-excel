@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 from typing import List
 
 import pandas as pd
@@ -7,42 +8,71 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from app.core.config import settings
 
+logger = logging.getLogger("app.api.routes.upload")
+
 router = APIRouter(tags=["upload"])
 
 
 @router.post("/upload")
 async def upload_excel(file: UploadFile = File(...)) -> dict:
     filename = file.filename or "uploaded.xlsx"
+    logger.info("="*60)
+    logger.info(f"📤 UPLOAD FILE REQUEST")
+    logger.info(f"   Original filename: {filename}")
+    
     if not filename.lower().endswith((".xlsx", ".xls")):
+        logger.error(f"   ❌ Invalid file extension: {filename}")
         raise HTTPException(status_code=400, detail="Only .xlsx or .xls files are supported")
 
     file_id = str(uuid.uuid4())
     saved_path = os.path.join(settings.storage_dir, f"{file_id}_{filename}")
+    logger.info(f"   Generated file ID: {file_id}")
+    logger.info(f"   Save path: {saved_path}")
 
     # Save file to disk
-    with open(saved_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-        f.flush()  # Ensure data is written to disk
-        os.fsync(f.fileno())  # Force OS to write to storage
+    try:
+        with open(saved_path, "wb") as f:
+            content = await file.read()
+            content_size = len(content)
+            logger.info(f"   File size: {content_size} bytes")
+            
+            f.write(content)
+            f.flush()  # Ensure data is written to disk
+            os.fsync(f.fileno())  # Force OS to write to storage
+            
+        logger.info(f"   ✅ File written to disk")
+    except Exception as e:
+        logger.error(f"   ❌ Error writing file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
     # Verify file exists and is accessible
     if not os.path.exists(saved_path):
+        logger.error(f"   ❌ File verification failed - file does not exist")
         raise HTTPException(status_code=500, detail="File save verification failed. Please try again.")
+    
+    actual_size = os.path.getsize(saved_path)
+    logger.info(f"   ✅ File verification passed, size: {actual_size} bytes")
     
     # Read sheet names
     try:
+        logger.info(f"   📊 Reading Excel sheets...")
         xls = pd.ExcelFile(saved_path)
         sheet_names: List[str] = xls.sheet_names
+        logger.info(f"   Found {len(sheet_names)} sheets: {sheet_names}")
         xls.close()  # Explicitly close to release file handle
+        logger.info(f"   ✅ Excel file processed successfully")
     except Exception as e:
+        logger.error(f"   ❌ Error reading Excel file: {e}")
         # Cleanup invalid file
         try:
             os.remove(saved_path)
-        except Exception:
-            pass
+            logger.info(f"   🗑️ Cleaned up invalid file")
+        except Exception as cleanup_e:
+            logger.error(f"   ❌ Error cleaning up file: {cleanup_e}")
         raise HTTPException(status_code=400, detail=f"Failed to read Excel file: {e}")
 
+    logger.info(f"   🎉 Upload completed successfully")
+    logger.info("="*60)
     return {"fileId": file_id, "filename": filename, "sheetNames": sheet_names}
 
 
