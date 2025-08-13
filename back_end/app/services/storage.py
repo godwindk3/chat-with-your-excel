@@ -79,37 +79,48 @@ def list_uploaded_files() -> List[Dict[str, Any]]:
     return files
 
 
-def delete_file_by_id(file_id: str) -> bool:
+def delete_file_by_id(file_id: str) -> tuple[bool, str]:
+    """
+    Delete file by ID.
+    Returns: (success: bool, error_message: str)
+    """
     logger.debug(f"🗑️  Attempting to delete file: {file_id}")
     
     file_path = find_file_by_id(file_id)
     logger.debug(f"   Found file path: {file_path}")
     
-    if file_path and os.path.exists(file_path):
-        try:
-            # Get file info before deletion for logging
-            file_size = os.path.getsize(file_path)
-            logger.debug(f"   File size: {file_size} bytes")
-            logger.debug(f"   Deleting file: {file_path}")
-            
-            os.remove(file_path)
-            
-            # Verify deletion
-            if not os.path.exists(file_path):
-                logger.debug(f"   ✅ File successfully deleted")
-                return True
-            else:
-                logger.warning(f"   ❌ File still exists after os.remove()")
-                return False
-                
-        except Exception as e:
-            logger.error(f"   ❌ Error deleting file: {e}")
-            return False
-    else:
-        if not file_path:
-            logger.debug(f"   ❌ File path not found for ID: {file_id}")
+    if not file_path:
+        logger.debug(f"   ❌ File path not found for ID: {file_id}")
+        return False, "File not found"
+    
+    if not os.path.exists(file_path):
+        logger.debug(f"   ❌ File does not exist: {file_path}")
+        return False, "File not found"
+    
+    try:
+        # Get file info before deletion for logging
+        file_size = os.path.getsize(file_path)
+        logger.debug(f"   File size: {file_size} bytes")
+        logger.debug(f"   Deleting file: {file_path}")
+        
+        os.remove(file_path)
+        
+        # Verify deletion
+        if not os.path.exists(file_path):
+            logger.debug(f"   ✅ File successfully deleted")
+            return True, ""
         else:
-            logger.debug(f"   ❌ File does not exist: {file_path}")
-        return False
+            logger.warning(f"   ❌ File still exists after os.remove()")
+            return False, "File deletion verification failed"
+            
+    except PermissionError as e:
+        logger.warning(f"   🔒 File is locked/in use: {e}")
+        return False, "File is currently in use. Please close any applications using this file and try again."
+    except OSError as e:
+        logger.error(f"   ❌ OS error deleting file: {e}")
+        return False, f"Cannot delete file: {e}"
+    except Exception as e:
+        logger.error(f"   ❌ Unexpected error deleting file: {e}")
+        return False, f"Unexpected error: {e}"
 
 

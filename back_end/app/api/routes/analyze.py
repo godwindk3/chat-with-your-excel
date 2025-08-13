@@ -40,11 +40,12 @@ def build_agent_for_file(file_path: str, sheet_name: str):
 
     # Optional: read description sheet and inject into prefix
     try:
-        if "Mô tả trường thông tin" in pd.ExcelFile(file_path).sheet_names:
-            col_desc_df = pd.read_excel(file_path, sheet_name="Mô tả trường thông tin")
-            col_desc_str = col_desc_df.to_string(index=False)
-        else:
-            col_desc_str = None
+        with pd.ExcelFile(file_path) as xls:
+            if "Mô tả trường thông tin" in xls.sheet_names:
+                col_desc_df = pd.read_excel(file_path, sheet_name="Mô tả trường thông tin")
+                col_desc_str = col_desc_df.to_string(index=False)
+            else:
+                col_desc_str = None
     except Exception:
         col_desc_str = None
 

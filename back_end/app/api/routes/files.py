@@ -43,8 +43,8 @@ def get_file_info(file_id: str):
     
     try:
         # Read sheet names from the Excel file
-        xls = pd.ExcelFile(file_path)
-        sheet_names: List[str] = xls.sheet_names
+        with pd.ExcelFile(file_path) as xls:
+            sheet_names: List[str] = xls.sheet_names
         
         # Get filename from path
         import os
@@ -112,21 +112,42 @@ def delete_file(file_id: str):
     
     # Retry logic for race condition with recent uploads
     logger.info("   Starting delete attempts...")
+    last_error_msg = "Unknown error"
+    
     for attempt in range(3):
         logger.info(f"   🔄 Delete attempt {attempt + 1}/3")
-        success = delete_file_by_id(file_id)
-        logger.info(f"   ➡️ Delete result: {success}")
+        success, error_msg = delete_file_by_id(file_id)
+        logger.info(f"   ➡️ Delete result: success={success}, error='{error_msg}'")
         
         if success:
             logger.info(f"   ✅ File deleted successfully on attempt {attempt + 1}")
             logger.info("="*60)
             return {"message": "File deleted successfully"}
         
-        # Short delay before retry (only for first 2 attempts)
+        last_error_msg = error_msg
+        
+        # Check if it's a permission error (file in use) - need longer wait
+        if "in use" in error_msg.lower() or "permission" in error_msg.lower():
+            if attempt < 2:
+                logger.info(f"   🔒 File locked, waiting 500ms before retry...")
+                time.sleep(0.5)  # Wait longer for file lock to be released
+                continue
+            else:
+                logger.error(f"   ❌ File still locked after all attempts")
+                logger.info("="*60)
+                raise HTTPException(status_code=423, detail=error_msg)
+        
+        # For "file not found" errors, don't retry
+        if "not found" in error_msg.lower():
+            logger.error(f"   ❌ File not found, no point retrying")
+            logger.info("="*60)
+            raise HTTPException(status_code=404, detail=error_msg)
+        
+        # Short delay before retry for other errors
         if attempt < 2:
             logger.info(f"   ⏳ Waiting 100ms before retry...")
             time.sleep(0.1)  # 100ms delay
     
-    logger.error(f"   ❌ Failed to delete file after 3 attempts")
+    logger.error(f"   ❌ Failed to delete file after 3 attempts. Last error: {last_error_msg}")
     logger.info("="*60)
-    raise HTTPException(status_code=404, detail="File not found")
+    raise HTTPException(status_code=500, detail=f"File deletion failed: {last_error_msg}")

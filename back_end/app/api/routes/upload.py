@@ -56,10 +56,9 @@ async def upload_excel(file: UploadFile = File(...)) -> dict:
     # Read sheet names
     try:
         logger.info(f"   📊 Reading Excel sheets...")
-        xls = pd.ExcelFile(saved_path)
-        sheet_names: List[str] = xls.sheet_names
-        logger.info(f"   Found {len(sheet_names)} sheets: {sheet_names}")
-        xls.close()  # Explicitly close to release file handle
+        with pd.ExcelFile(saved_path) as xls:
+            sheet_names: List[str] = xls.sheet_names
+            logger.info(f"   Found {len(sheet_names)} sheets: {sheet_names}")
         logger.info(f"   ✅ Excel file processed successfully")
     except Exception as e:
         logger.error(f"   ❌ Error reading Excel file: {e}")
