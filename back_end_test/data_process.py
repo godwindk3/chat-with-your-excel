@@ -1,54 +1,61 @@
 import pandas as pd
-import numpy as np
 
-def clean_excel(file_path, sheet_name=None, output_path="cleaned_data.xlsx"):
-    """
-    Đọc và làm sạch dữ liệu từ file Excel.
-    - Đồng nhất kiểu dữ liệu
-    - Chuẩn hóa ngày giờ
-    - Xử lý NaN
-    - Xóa khoảng trắng thừa
-    """
+# ====== Cấu hình ======
+input_file = "./data/data.xlsx"   # File Excel gốc
+output_file = "./data/data_clean.xlsx"  # File Excel đã làm sạch
+sheets_to_clean = ["Đơn hàng vận chuyển", "Đơn hàng vận chuyển nội bộ"]
+# ======================
 
-    # Đọc Excel
-    df = pd.read_excel(file_path, sheet_name=sheet_name)
+# Hàm chuẩn hóa một sheet
+def clean_sheet(df):
+    # 1. Xoá cột toàn NaN
+    df = df.dropna(axis=1, how='all')
 
-    # 1. Xóa khoảng trắng ở tên cột
-    df.columns = df.columns.str.strip()
+    # 2. Chuẩn hóa cột ngày giờ
+    datetime_cols = [
+        "Dự kiến rời điểm lấy",
+        "Dự kiến rời điểm giao",
+        "Thời gian thực tế rời điểm lấy",
+        "Thời gian thực tế rời điểm giao"
+    ]
+    for col in datetime_cols:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
 
-    # 2. Chuẩn hóa từng cột
-    for col in df.columns:
-        # Nếu toàn bộ là số hoặc NaN -> chuyển sang float
-        if pd.api.types.is_numeric_dtype(df[col]):
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+    # 3. Chuẩn hóa cột mã định danh về string
+    id_cols = [
+        "Mã chuyến", "Mã đơn hàng", "Mã điểm lấy", 
+        "Mã điểm giao", "Mã nhóm hàng", "Mã hàng hóa"
+    ]
+    for col in id_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(str)
 
-        # Nếu có giá trị datetime hoặc dạng chuỗi ngày giờ -> convert sang datetime
-        elif pd.api.types.is_datetime64_any_dtype(df[col]):
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-        else:
-            # Nếu là object thì thử ép kiểu
-            try:
-                df[col] = pd.to_datetime(df[col], errors="coerce")
-                if df[col].notna().any():
-                    continue
-            except:
-                pass
-
-            # Nếu không phải datetime thì convert toàn bộ sang string để tránh mixed types
-            df[col] = df[col].astype(str).replace("nan", np.nan).str.strip()
-
-    # 3. Xử lý NaN
-    df = df.fillna("")
-
-    # 4. Xuất ra file mới
-    df.to_excel(output_path, index=False)
-    print(f"✅ Dữ liệu đã được làm sạch và lưu tại: {output_path}")
+    # 4. Chuẩn hóa cột số liệu về numeric
+    numeric_candidates = [
+        col for col in df.columns
+        if any(keyword in col.lower() for keyword in [
+            "tấn", "khối", "số lượng"
+        ])
+    ]
+    for col in numeric_candidates:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
 
     return df
 
-if __name__ == "__main__":
-    cleaned_df = clean_excel(
-        file_path="data.xlsx",
-        sheet_name=None,  # hoặc tên sheet, vd: "Sheet1"
-        output_path="cleaned_data.xlsx"
-    )
+# Đọc file Excel
+all_sheets = pd.read_excel(input_file, sheet_name=None)
+
+# Làm sạch 2 sheet được chọn
+cleaned_sheets = {}
+for sheet in sheets_to_clean:
+    if sheet in all_sheets:
+        cleaned_sheets[sheet] = clean_sheet(all_sheets[sheet])
+
+# Xuất file Excel mới
+with pd.ExcelWriter(output_file) as writer:
+    for name, df in cleaned_sheets.items():
+        df.to_excel(writer, sheet_name=name, index=False)
+
+print(f"✅ Đã xuất file '{output_file}' với 2 sheet đã chuẩn hóa.")
