@@ -4,3 +4,4 @@ node_modules/
 storage/
 __pycache__/
 logs/
+chroma_langchain_db/
