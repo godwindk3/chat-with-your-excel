@@ -1,4 +1,7 @@
-import type { UploadResponse, CreateSessionResponse, HistoryResponse, SessionSummary, Message, FileInfo } from './types'
+import type { 
+  UploadResponse, CreateSessionResponse, HistoryResponse, SessionSummary, Message, FileInfo,
+  RAGUploadResponse, RAGSessionRequest, RAGSessionResponse, RAGQueryRequest, RAGQueryResponse, RAGAskRequest
+} from './types'
 
 export const API_BASE = (import.meta as any).env.VITE_API_BASE || 'http://localhost:8000/api'
 
@@ -89,6 +92,79 @@ export async function listFiles(): Promise<FileInfo[]> {
 
 export async function deleteFile(fileId: string): Promise<void> {
   const res = await fetch(`${API_BASE}/files/${fileId}`, { 
+    method: 'DELETE',
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+}
+
+// RAG API Functions
+export async function uploadRAGFile(file: File): Promise<RAGUploadResponse> {
+  const form = new FormData()
+  form.append('file', file)
+  const res = await fetch(`${API_BASE}/rag/upload`, { 
+    method: 'POST', 
+    headers: createHeaders(),
+    body: form 
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function createRAGSession(req: RAGSessionRequest): Promise<RAGSessionResponse> {
+  const res = await fetch(`${API_BASE}/rag/session`, {
+    method: 'POST', 
+    headers: createHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(req)
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function listRAGSessions(): Promise<RAGSessionResponse[]> {
+  const res = await fetch(`${API_BASE}/rag/sessions`, {
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function getRAGSession(sessionId: string): Promise<RAGSessionResponse> {
+  const res = await fetch(`${API_BASE}/rag/session/${sessionId}`, {
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function getRAGSessionMessages(sessionId: string): Promise<Message[]> {
+  const res = await fetch(`${API_BASE}/rag/session/${sessionId}/messages`, {
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function askRAGDocument(sessionId: string, req: RAGAskRequest): Promise<Message> {
+  const res = await fetch(`${API_BASE}/rag/session/${sessionId}/ask`, {
+    method: 'POST', 
+    headers: createHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(req)
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+export async function deleteRAGSession(sessionId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/rag/session/${sessionId}`, { 
+    method: 'DELETE',
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+}
+
+export async function deleteRAGFile(fileId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/rag/file/${fileId}`, { 
     method: 'DELETE',
     headers: createHeaders()
   })

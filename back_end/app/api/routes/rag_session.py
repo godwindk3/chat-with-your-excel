@@ -99,16 +99,18 @@ def create_rag_session(req: RAGSessionRequest):
 def list_rag_sessions():
     """List all RAG chat sessions"""
     try:
-        all_sessions = get_all_sessions()
+        from app.services.session_store import list_sessions
         
-        # Filter for RAG sessions and include file type info
-        rag_sessions = []
-        for session in all_sessions:
+        # Get only RAG sessions using the session_type filter
+        rag_sessions = list_sessions(session_type="rag")
+        
+        # Add filename info for each session
+        for session in rag_sessions:
             file_path = find_file_by_id(session["fileId"])
-            if file_path and is_rag_file(file_path):
-                session_data = session.copy()
-                session_data["filename"] = os.path.basename(file_path).split("_", 1)[1] if "_" in os.path.basename(file_path) else os.path.basename(file_path)
-                rag_sessions.append(session_data)
+            if file_path:
+                session["filename"] = os.path.basename(file_path).split("_", 1)[1] if "_" in os.path.basename(file_path) else os.path.basename(file_path)
+            else:
+                session["filename"] = "File not found"
         
         logger.info(f"📋 Listed {len(rag_sessions)} RAG sessions")
         return rag_sessions
@@ -125,10 +127,15 @@ def get_rag_session(session_id: str):
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Verify it's a RAG session
+    # Verify it's a RAG session by sessionType
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "rag":
+        raise HTTPException(status_code=400, detail="Not a RAG session")
+    
+    # Also verify file type for double check
     file_path = find_file_by_id(rec["fileId"])
     if not file_path or not is_rag_file(file_path):
-        raise HTTPException(status_code=400, detail="Not a RAG session")
+        raise HTTPException(status_code=400, detail="Not a RAG compatible file")
     
     session_data = rec.copy()
     session_data["filename"] = os.path.basename(file_path).split("_", 1)[1] if "_" in os.path.basename(file_path) else os.path.basename(file_path)
@@ -143,9 +150,9 @@ def get_rag_session_messages(session_id: str) -> List[Message]:
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Verify it's a RAG session
-    file_path = find_file_by_id(rec["fileId"])
-    if not file_path or not is_rag_file(file_path):
+    # Verify it's a RAG session by sessionType
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "rag":
         raise HTTPException(status_code=400, detail="Not a RAG session")
     
     messages = get_session_messages(session_id)
@@ -159,9 +166,9 @@ def delete_rag_session(session_id: str):
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
     
-    # Verify it's a RAG session
-    file_path = find_file_by_id(rec["fileId"])
-    if not file_path or not is_rag_file(file_path):
+    # Verify it's a RAG session by sessionType
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "rag":
         raise HTTPException(status_code=400, detail="Not a RAG session")
     
     success = delete_session_record(session_id)
@@ -186,13 +193,18 @@ async def ask_rag_document(session_id: str, req: RAGAskRequest):
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # Verify it's a RAG session by sessionType
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "rag":
+        raise HTTPException(status_code=400, detail="Not a RAG session")
+
     file_id = rec["fileId"]
     file_path = find_file_by_id(file_id)
     if not file_path:
         raise HTTPException(status_code=404, detail="File not found")
     
     if not is_rag_file(file_path):
-        raise HTTPException(status_code=400, detail="Not a RAG session")
+        raise HTTPException(status_code=400, detail="Not a RAG compatible file")
 
     # Store user message first
     now = datetime.now(timezone.utc).isoformat()

@@ -57,7 +57,7 @@ def create_session(req: CreateSessionRequest):
 
     session_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
-    create_session_record(session_id=session_id, file_id=req.fileId, sheet_name=req.sheetName, created_at=now)
+    create_session_record(session_id=session_id, file_id=req.fileId, sheet_name=req.sheetName, created_at=now, session_type="pandas")
     return CreateSessionResponse(sessionId=session_id, fileId=req.fileId, sheetName=req.sheetName, createdAt=now)
 
 
@@ -66,6 +66,12 @@ def get_history(session_id: str):
     rec = get_session_record(session_id)
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Verify it's a pandas session
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "pandas":
+        raise HTTPException(status_code=400, detail="Not a pandas session")
+    
     return HistoryResponse(sessionId=session_id, fileId=rec["fileId"], sheetName=rec["sheetName"], messages=rec["messages"])
 
 
@@ -76,15 +82,26 @@ class SessionSummary(BaseModel):
     createdAt: str
     messagesCount: int
     lastMessageAt: str
+    sessionType: str
 
 
 @router.get("/sessions", response_model=list[SessionSummary])
 def list_all_sessions(fileId: str | None = None):
-    return list_sessions(file_id=fileId)
+    # Only return pandas sessions for regular /sessions endpoint
+    return list_sessions(file_id=fileId, session_type="pandas")
 
 
 @router.delete("/session/{session_id}")
 def delete_session_endpoint(session_id: str):
+    # Verify it's a pandas session before deleting
+    rec = get_session_record(session_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "pandas":
+        raise HTTPException(status_code=400, detail="Not a pandas session")
+    
     success = delete_session(session_id)
     if success:
         return {"message": "Session deleted successfully"}
@@ -97,6 +114,11 @@ def ask(session_id: str, req: AskRequest):
     rec = get_session_record(session_id)
     if not rec:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    # Verify it's a pandas session
+    session_type = rec.get("sessionType", "pandas")
+    if session_type != "pandas":
+        raise HTTPException(status_code=400, detail="Not a pandas session")
 
     file_id = rec["fileId"]
     sheet_name = rec["sheetName"]

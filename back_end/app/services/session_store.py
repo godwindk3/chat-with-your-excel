@@ -47,7 +47,7 @@ def append_message(session_id: str, role: str, content: str, timestamp: str) -> 
         json.dump(rec, f, ensure_ascii=False, indent=2)
 
 
-def list_sessions(file_id: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_sessions(file_id: Optional[str] = None, session_type: Optional[str] = None) -> List[Dict[str, Any]]:
     sessions: List[Dict[str, Any]] = []
     try:
         for name in os.listdir(settings.storage_dir):
@@ -57,13 +57,22 @@ def list_sessions(file_id: Optional[str] = None) -> List[Dict[str, Any]]:
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     rec = json.load(f)
+                    
+                    # Filter by file_id if provided
                     if file_id and rec.get("fileId") != file_id:
                         continue
+                    
+                    # Filter by session_type if provided
+                    rec_session_type = rec.get("sessionType", "pandas")  # default to pandas for backward compatibility
+                    if session_type and rec_session_type != session_type:
+                        continue
+                    
                     sessions.append({
                         "sessionId": rec.get("sessionId"),
                         "fileId": rec.get("fileId"),
                         "sheetName": rec.get("sheetName"),
                         "createdAt": rec.get("createdAt"),
+                        "sessionType": rec_session_type,
                         "messagesCount": len(rec.get("messages", [])),
                         "lastMessageAt": rec.get("messages", [])[-1]["timestamp"] if rec.get("messages") else rec.get("createdAt"),
                     })

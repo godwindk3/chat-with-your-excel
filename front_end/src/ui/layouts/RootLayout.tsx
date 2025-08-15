@@ -13,10 +13,19 @@ export const RootLayout: React.FC = () => {
           </div>
         </div>
         <nav className="actions">
-          <NavLink className="btn" to="/">Upload</NavLink>
-          <NavLink className="btn" to="/chat">Chat</NavLink>
-          <NavLink className="btn" to="/sessions">Sessions</NavLink>
-          <NavLink className="btn" to="/files">Files</NavLink>
+          <div className="nav-group">
+            <span className="nav-label">Excel Analysis</span>
+            <NavLink className="btn" to="/">Upload</NavLink>
+            <NavLink className="btn" to="/chat">Chat</NavLink>
+            <NavLink className="btn" to="/sessions">Sessions</NavLink>
+            <NavLink className="btn" to="/files">Files</NavLink>
+          </div>
+          <div className="nav-group">
+            <span className="nav-label">RAG Chat</span>
+            <NavLink className="btn" to="/rag">RAG Upload</NavLink>
+            <NavLink className="btn" to="/rag/chat">RAG Chat</NavLink>
+            <NavLink className="btn" to="/rag/sessions">RAG Sessions</NavLink>
+          </div>
         </nav>
       </div>
       <Outlet />
