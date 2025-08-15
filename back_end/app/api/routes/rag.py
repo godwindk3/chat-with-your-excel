@@ -218,19 +218,27 @@ def delete_rag_file(file_id: str):
         raise HTTPException(status_code=404, detail="File not found")
     
     try:
-        # Delete the file
-        os.remove(file_path)
-        logger.info(f"   ✅ File deleted: {file_path}")
+        # Delete the file if it exists
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"   ✅ File deleted: {file_path}")
+        else:
+            logger.info(f"   ℹ️  File already deleted: {file_path}")
         
         # Delete vector data directory
         vector_data_dir = os.path.join(settings.storage_dir, "rag_data", file_id)
         if os.path.exists(vector_data_dir):
             shutil.rmtree(vector_data_dir)
             logger.info(f"   ✅ Vector data deleted: {vector_data_dir}")
+        else:
+            logger.info(f"   ℹ️  Vector data already deleted: {vector_data_dir}")
         
         logger.info(f"   🎉 RAG file deletion completed")
         return {"message": "File and vector data deleted successfully"}
         
+    except PermissionError as e:
+        logger.error(f"   ❌ Permission denied deleting file: {e}")
+        raise HTTPException(status_code=500, detail=f"File may be in use. Please try again later.")
     except Exception as e:
         logger.error(f"   ❌ Error deleting file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to delete file: {e}")
