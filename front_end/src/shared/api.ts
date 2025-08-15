@@ -1,6 +1,6 @@
 import type { 
   UploadResponse, CreateSessionResponse, HistoryResponse, SessionSummary, Message, FileInfo,
-  RAGUploadResponse, RAGSessionRequest, RAGSessionResponse, RAGQueryRequest, RAGQueryResponse, RAGAskRequest
+  RAGUploadResponse, RAGSessionRequest, RAGSessionResponse, RAGQueryRequest, RAGQueryResponse, RAGAskRequest, RAGFileInfo
 } from './types'
 
 export const API_BASE = (import.meta as any).env.VITE_API_BASE || 'http://localhost:8000/api'
@@ -169,6 +169,14 @@ export async function deleteRAGFile(fileId: string): Promise<void> {
     headers: createHeaders()
   })
   if (!res.ok) throw new Error(await res.text())
+}
+
+export async function listRAGFiles(): Promise<RAGFileInfo[]> {
+  const res = await fetch(`${API_BASE}/rag/files`, {
+    headers: createHeaders()
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
 }
 
 

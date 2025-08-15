@@ -395,6 +395,172 @@ body {
   border-color: #2b3a5f;
 }
 
+/* Existing Files Section */
+.existing-files-section {
+  min-height: 300px;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.file-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+.file-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.file-card-header {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.file-icon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.file-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.file-type {
+  background: rgba(79, 70, 229, 0.2);
+  color: #c7d2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.file-size,
+.file-date {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.file-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Sidebar File List */
+.sidebar-help h4 {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-help {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.empty-help p {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: background .15s ease;
+}
+
+.file-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.file-item-icon {
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.file-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-item-name {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+.file-item-meta {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.loading-container.small {
+  padding: 12px;
+  gap: 8px;
+}
+
+.loading-container.small .spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.loading-container.small span {
+  font-size: 11px;
+}
+
 /* Navigation Groups */
 .nav-group {
   display: flex;

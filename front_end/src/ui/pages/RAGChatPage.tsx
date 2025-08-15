@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { 
-  createRAGSession, askRAGDocument, getRAGSessionMessages, listRAGSessions 
+  createRAGSession, askRAGDocument, getRAGSessionMessages, listRAGSessions, listRAGFiles
 } from '../../shared/api'
-import type { RAGSessionResponse, Message } from '../../shared/types'
+import type { RAGSessionResponse, Message, RAGFileInfo } from '../../shared/types'
 
 export const RAGChatPage: React.FC = () => {
   const [searchParams] = useSearchParams()
@@ -16,6 +16,8 @@ export const RAGChatPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [newSessionName, setNewSessionName] = useState('')
   const [showNewSessionForm, setShowNewSessionForm] = useState(false)
+  const [ragFiles, setRAGFiles] = useState<RAGFileInfo[]>([])
+  const [loadingFiles, setLoadingFiles] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const fileId = searchParams.get('fileId')
@@ -24,6 +26,9 @@ export const RAGChatPage: React.FC = () => {
 
   useEffect(() => {
     loadSessions()
+    if (!fileId) {
+      loadRAGFiles()
+    }
   }, [])
 
   useEffect(() => {
@@ -56,6 +61,18 @@ export const RAGChatPage: React.FC = () => {
       setSessions(sessionList)
     } catch (err) {
       setError('Failed to load sessions')
+    }
+  }
+
+  const loadRAGFiles = async () => {
+    try {
+      setLoadingFiles(true)
+      const files = await listRAGFiles()
+      setRAGFiles(files)
+    } catch (err) {
+      console.error('Failed to load RAG files:', err)
+    } finally {
+      setLoadingFiles(false)
     }
   }
 
@@ -127,6 +144,23 @@ export const RAGChatPage: React.FC = () => {
     }
   }
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const getFileIcon = (fileType: string) => {
+    switch (fileType) {
+      case 'pdf': return '📄'
+      case 'docx': return '📝'
+      case 'txt': return '📄'
+      default: return '📄'
+    }
+  }
+
   return (
     <div className="main">
       <div className="chat-container">
@@ -189,10 +223,45 @@ export const RAGChatPage: React.FC = () => {
             ))}
           </div>
 
-          {!fileId && (
+          {!fileId && !selectedSession && (
             <div className="sidebar-help">
-              <p>To start a new session:</p>
-              <Link to="/rag" className="btn">Upload Document</Link>
+              <h4>📂 Available Documents</h4>
+              {loadingFiles ? (
+                <div className="loading-container small">
+                  <div className="spinner"></div>
+                  <span>Loading...</span>
+                </div>
+              ) : ragFiles.length === 0 ? (
+                <div className="empty-help">
+                  <p>No documents available</p>
+                  <Link to="/rag" className="btn small">Upload Document</Link>
+                </div>
+              ) : (
+                <div className="files-list">
+                  {ragFiles.slice(0, 5).map(file => (
+                    <div key={file.fileId} className="file-item">
+                      <div className="file-item-icon">{getFileIcon(file.fileType)}</div>
+                      <div className="file-item-info">
+                        <div className="file-item-name">{file.filename}</div>
+                        <div className="file-item-meta">
+                          {file.fileType.toUpperCase()} • {formatFileSize(file.size)}
+                        </div>
+                      </div>
+                      <Link 
+                        to={`/rag/chat?fileId=${file.fileId}&filename=${encodeURIComponent(file.filename)}`}
+                        className="btn small primary"
+                      >
+                        Chat
+                      </Link>
+                    </div>
+                  ))}
+                  {ragFiles.length > 5 && (
+                    <Link to="/rag" className="btn small">
+                      View All ({ragFiles.length})
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

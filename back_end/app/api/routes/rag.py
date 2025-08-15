@@ -199,9 +199,44 @@ async def query_document(req: RAGQueryRequest):
 @router.get("/rag/files")
 def list_rag_files():
     """List all uploaded RAG files"""
-    # This would need to be implemented if we want to track RAG files separately
-    # For now, we can use the existing files endpoint and filter by file extension
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    logger.info("📂 RAG FILES LIST REQUEST")
+    
+    try:
+        import glob
+        from app.services.storage import list_all_files
+        
+        # Get all files and filter for RAG compatible files
+        all_files = list_all_files()
+        rag_files = []
+        
+        for file_info in all_files:
+            filename = file_info.get("filename", "")
+            if filename.lower().endswith((".txt", ".docx", ".pdf")):
+                # Extract original filename (remove UUID prefix)
+                original_filename = filename
+                if "_" in filename:
+                    parts = filename.split("_", 1)
+                    if len(parts) > 1:
+                        original_filename = parts[1]
+                
+                rag_files.append({
+                    "fileId": file_info["fileId"],
+                    "filename": original_filename,
+                    "fullFilename": filename,
+                    "size": file_info.get("size", 0),
+                    "uploadedAt": file_info.get("uploadedAt", 0),
+                    "fileType": filename.split(".")[-1].lower() if "." in filename else "unknown"
+                })
+        
+        # Sort by upload time (newest first)
+        rag_files.sort(key=lambda x: x["uploadedAt"], reverse=True)
+        
+        logger.info(f"📂 Found {len(rag_files)} RAG files")
+        return rag_files
+        
+    except Exception as e:
+        logger.error(f"❌ Error listing RAG files: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to list RAG files: {e}")
 
 
 @router.delete("/rag/file/{file_id}")

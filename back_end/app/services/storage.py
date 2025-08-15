@@ -26,7 +26,8 @@ def find_file_by_id(file_id: str) -> Optional[str]:
         logger.debug(f"   Files in storage: {files}")
         
         for filename in files:
-            if filename.startswith(prefix) and filename.endswith((".xlsx", ".xls")):
+            # Support both Excel and RAG files
+            if filename.startswith(prefix) and filename.endswith((".xlsx", ".xls", ".txt", ".docx", ".pdf")):
                 full_path = os.path.join(settings.storage_dir, filename)
                 logger.debug(f"   Found matching file: {filename}")
                 logger.debug(f"   Full path: {full_path}")
@@ -50,11 +51,49 @@ def find_file_by_id(file_id: str) -> Optional[str]:
 
 
 def list_uploaded_files() -> List[Dict[str, Any]]:
+    """List only Excel files for pandas agent"""
     files = []
     try:
         for name in os.listdir(settings.storage_dir):
             if name.startswith("session_") or not ("_" in name and name.endswith((".xlsx", ".xls"))):
                 continue
+            path = os.path.join(settings.storage_dir, name)
+            try:
+                stat = os.stat(path)
+                # Extract file_id and original name
+                parts = name.split("_", 1)
+                if len(parts) >= 2:
+                    file_id = parts[0]
+                    original_name = parts[1]
+                    files.append({
+                        "fileId": file_id,
+                        "filename": original_name,
+                        "size": stat.st_size,
+                        "uploadedAt": stat.st_mtime,
+                        "path": path
+                    })
+            except Exception:
+                continue
+        # Sort by upload time desc
+        files.sort(key=lambda f: f["uploadedAt"], reverse=True)
+    except FileNotFoundError:
+        pass
+    return files
+
+
+def list_all_files() -> List[Dict[str, Any]]:
+    """List all uploaded files (Excel, txt, docx, pdf)"""
+    files = []
+    try:
+        for name in os.listdir(settings.storage_dir):
+            # Skip session files and files without proper naming convention
+            if name.startswith("session_") or not ("_" in name):
+                continue
+            
+            # Check if it's a supported file type
+            if not name.endswith((".xlsx", ".xls", ".txt", ".docx", ".pdf")):
+                continue
+                
             path = os.path.join(settings.storage_dir, name)
             try:
                 stat = os.stat(path)

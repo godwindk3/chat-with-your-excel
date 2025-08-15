@@ -12,5 +12,6 @@ export type RAGSessionResponse = { sessionId: string; sessionName: string; fileI
 export type RAGQueryRequest = { fileId: string; question: string }
 export type RAGQueryResponse = { answer: string }
 export type RAGAskRequest = { question: string }
+export type RAGFileInfo = { fileId: string; filename: string; fullFilename: string; size: number; uploadedAt: number; fileType: string }
 
 
