@@ -547,6 +547,12 @@ body {
   color: var(--muted);
 }
 
+.file-item-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
 .loading-container.small {
   padding: 12px;
   gap: 8px;

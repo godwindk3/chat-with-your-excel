@@ -241,8 +241,9 @@ def list_rag_files():
 
 @router.delete("/rag/file/{file_id}")
 def delete_rag_file(file_id: str):
-    """Delete a RAG file and its vector data"""
+    """Delete a RAG file, its vector data, and associated sessions"""
     import shutil
+    from app.services.session_store import list_sessions, delete_session
     
     logger.info(f"🗑️ RAG DELETE REQUEST: {file_id}")
     
@@ -252,8 +253,27 @@ def delete_rag_file(file_id: str):
         logger.error(f"   ❌ File not found: {file_id}")
         raise HTTPException(status_code=404, detail="File not found")
     
+    # Verify it's a RAG file
+    if not file_path.lower().endswith((".txt", ".docx", ".pdf")):
+        logger.error(f"   ❌ Not a RAG file: {file_path}")
+        raise HTTPException(status_code=400, detail="Not a RAG file")
+    
     try:
-        # Delete the file if it exists
+        # First, find and delete all related RAG sessions
+        related_sessions = list_sessions(file_id=file_id, session_type="rag")
+        deleted_sessions = 0
+        for session in related_sessions:
+            try:
+                if delete_session(session["sessionId"]):
+                    deleted_sessions += 1
+                    logger.info(f"   🗑️ Deleted related session: {session['sessionId']}")
+            except Exception as e:
+                logger.warning(f"   ⚠️ Failed to delete session {session['sessionId']}: {e}")
+        
+        if deleted_sessions > 0:
+            logger.info(f"   📊 Deleted {deleted_sessions} related sessions")
+        
+        # Delete the physical file
         if os.path.exists(file_path):
             os.remove(file_path)
             logger.info(f"   ✅ File deleted: {file_path}")
@@ -269,7 +289,10 @@ def delete_rag_file(file_id: str):
             logger.info(f"   ℹ️  Vector data already deleted: {vector_data_dir}")
         
         logger.info(f"   🎉 RAG file deletion completed")
-        return {"message": "File and vector data deleted successfully"}
+        return {
+            "message": "File and vector data deleted successfully",
+            "deletedSessions": deleted_sessions
+        }
         
     except PermissionError as e:
         logger.error(f"   ❌ Permission denied deleting file: {e}")

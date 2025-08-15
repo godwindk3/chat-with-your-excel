@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { listRAGSessions, deleteRAGSession } from '../../shared/api'
+import { listRAGSessions, deleteRAGSession, deleteRAGFile } from '../../shared/api'
 import type { RAGSessionResponse } from '../../shared/types'
 
 export const RAGSessionsPage: React.FC = () => {
@@ -8,6 +8,7 @@ export const RAGSessionsPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
 
   useEffect(() => {
     loadSessions()
@@ -43,6 +44,25 @@ export const RAGSessionsPage: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString()
+  }
+
+  const handleDeleteFile = async (fileId: string, filename: string) => {
+    if (!confirm(`Delete file "${filename}"?\n\nThis will delete the file and ALL related sessions permanently.`)) {
+      return
+    }
+
+    try {
+      setDeletingFileId(fileId)
+      await deleteRAGFile(fileId)
+      
+      // Remove all sessions related to this file
+      setSessions(prev => prev.filter(s => s.fileId !== fileId))
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete file')
+    } finally {
+      setDeletingFileId(null)
+    }
   }
 
   if (loading) {
@@ -122,8 +142,17 @@ export const RAGSessionsPage: React.FC = () => {
                     onClick={() => handleDeleteSession(session.sessionId)}
                     disabled={deletingId === session.sessionId}
                     className="btn danger small"
+                    title="Delete session only"
                   >
-                    {deletingId === session.sessionId ? 'Deleting...' : 'Delete'}
+                    {deletingId === session.sessionId ? 'Deleting...' : 'Delete Session'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteFile(session.fileId, session.filename)}
+                    disabled={deletingFileId === session.fileId}
+                    className="btn danger small"
+                    title="Delete file and all related sessions"
+                  >
+                    {deletingFileId === session.fileId ? 'Deleting...' : '🗑️ Delete File'}
                   </button>
                 </div>
               </div>

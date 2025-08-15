@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { 
-  createRAGSession, askRAGDocument, getRAGSessionMessages, listRAGSessions, listRAGFiles
+  createRAGSession, askRAGDocument, getRAGSessionMessages, listRAGSessions, listRAGFiles, deleteRAGFile
 } from '../../shared/api'
 import type { RAGSessionResponse, Message, RAGFileInfo } from '../../shared/types'
 
@@ -18,6 +18,7 @@ export const RAGChatPage: React.FC = () => {
   const [showNewSessionForm, setShowNewSessionForm] = useState(false)
   const [ragFiles, setRAGFiles] = useState<RAGFileInfo[]>([])
   const [loadingFiles, setLoadingFiles] = useState(false)
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const fileId = searchParams.get('fileId')
@@ -161,6 +162,34 @@ export const RAGChatPage: React.FC = () => {
     }
   }
 
+  const handleDeleteFile = async (fileId: string, filename: string) => {
+    if (!confirm(`Delete "${filename}"?\n\nThis will delete the file and all its chat sessions.`)) {
+      return
+    }
+
+    try {
+      setDeletingFileId(fileId)
+      await deleteRAGFile(fileId)
+      
+      // Remove from files list
+      setRAGFiles(prev => prev.filter(f => f.fileId !== fileId))
+      
+      // Remove related sessions
+      setSessions(prev => prev.filter(s => s.fileId !== fileId))
+      
+      // If current session is related to deleted file, clear it
+      if (selectedSession && selectedSession.fileId === fileId) {
+        setSelectedSession(null)
+        setMessages([])
+      }
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete file')
+    } finally {
+      setDeletingFileId(null)
+    }
+  }
+
   return (
     <div className="main">
       <div className="chat-container">
@@ -247,12 +276,22 @@ export const RAGChatPage: React.FC = () => {
                           {file.fileType.toUpperCase()} • {formatFileSize(file.size)}
                         </div>
                       </div>
-                      <Link 
-                        to={`/rag/chat?fileId=${file.fileId}&filename=${encodeURIComponent(file.filename)}`}
-                        className="btn small primary"
-                      >
-                        Chat
-                      </Link>
+                      <div className="file-item-actions">
+                        <Link 
+                          to={`/rag/chat?fileId=${file.fileId}&filename=${encodeURIComponent(file.filename)}`}
+                          className="btn small primary"
+                        >
+                          Chat
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteFile(file.fileId, file.filename)}
+                          disabled={deletingFileId === file.fileId}
+                          className="btn small danger"
+                          title="Delete file"
+                        >
+                          {deletingFileId === file.fileId ? '⏳' : '🗑️'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {ragFiles.length > 5 && (

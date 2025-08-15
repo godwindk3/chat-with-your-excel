@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { uploadRAGFile, listRAGFiles } from '../../shared/api'
+import { uploadRAGFile, listRAGFiles, deleteRAGFile } from '../../shared/api'
 import type { RAGUploadResponse, RAGFileInfo } from '../../shared/types'
 
 export const RAGUploadPage: React.FC = () => {
@@ -10,6 +10,7 @@ export const RAGUploadPage: React.FC = () => {
   const [ragFiles, setRAGFiles] = useState<RAGFileInfo[]>([])
   const [loadingFiles, setLoadingFiles] = useState(true)
   const [selectedTab, setSelectedTab] = useState<'upload' | 'existing'>('upload')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadRAGFiles()
@@ -73,6 +74,35 @@ export const RAGUploadPage: React.FC = () => {
       case 'docx': return '📝'
       case 'txt': return '📄'
       default: return '📄'
+    }
+  }
+
+  const handleDeleteFile = async (fileId: string, filename: string) => {
+    if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis will also delete all related chat sessions and cannot be undone.`)) {
+      return
+    }
+
+    try {
+      setDeletingId(fileId)
+      setError(null)
+      await deleteRAGFile(fileId)
+      
+      // Remove file from local state
+      setRAGFiles(prev => prev.filter(f => f.fileId !== fileId))
+      
+      // Show success message briefly
+      const successMsg = `File "${filename}" deleted successfully`
+      setError(null)
+      
+      // Optional: Show success message
+      setTimeout(() => {
+        // Could show a success toast here
+      }, 100)
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete file')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -172,6 +202,14 @@ export const RAGUploadPage: React.FC = () => {
                         >
                           Start Chat
                         </Link>
+                        <button
+                          onClick={() => handleDeleteFile(file.fileId, file.filename)}
+                          disabled={deletingId === file.fileId}
+                          className="btn danger small"
+                          title="Delete file"
+                        >
+                          {deletingId === file.fileId ? '🗑️...' : '🗑️'}
+                        </button>
                       </div>
                     </div>
                   ))}
