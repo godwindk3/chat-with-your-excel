@@ -1,21 +1,30 @@
-﻿# Excel Analysis Chat App
+﻿# Excel & Document Analysis Chat App
 
-A web application for analyzing Excel files using AI chat interface. Upload Excel files, select sheets, and ask questions about your data using natural language.
+A comprehensive web application for analyzing both Excel files and documents using AI chat interface. Features dual analysis modes: Excel/CSV analysis with pandas agent and document chat using RAG (Retrieval-Augmented Generation) technology.
 
 ## Features
 
-- 📊 **Excel File Analysis**: Upload and analyze .xlsx/.xls files
-- 💬 **Chat Interface**: Ask questions about your data in natural language
-- 📝 **Session Management**: Save and continue conversations
-- 📁 **File Management**: Reuse uploaded files from storage
+### 📊 **Excel Analysis (Pandas Agent)**
+- 📈 **Excel/CSV File Analysis**: Upload and analyze .xlsx/.xls/.csv files
+- 💬 **Natural Language Queries**: Ask questions about your data
+- 📝 **Session Management**: Save and continue analysis conversations
 - 🔄 **Sheet Selection**: Choose specific sheets to analyze
 - 🗂️ **Smart Preprocessing**: Automatic data type detection and cleaning
+
+### 🤖 **Document Chat (RAG System)**
+- 📄 **Document Upload**: Support for .txt, .docx, .pdf files
+- 🧠 **Intelligent Chat**: Chat with your documents using RAG technology
+- 🔍 **Semantic Search**: Find relevant information across document content
+- 💾 **Session History**: Persistent chat sessions with documents
+- 🗑️ **File Management**: Upload, select, and delete document files
 
 ## Tech Stack
 
 - **Backend**: FastAPI, pandas, LangChain, Google Gemini AI
 - **Frontend**: React, TypeScript, Vite
-- **Storage**: Local file system for Excel files and chat sessions
+- **Storage**: Local file system for files and chat sessions
+- **RAG**: Vector embeddings with Google Gemini for document analysis
+- **Analytics**: Pandas agent for Excel/CSV data analysis
 
 ## Setup & Installation
 
@@ -95,11 +104,13 @@ Frontend will be available at: http://localhost:5173
 
 ## Usage
 
-1. **Upload Files**: 
-   - Go to Upload page or use Chat sidebar
-   - Upload new Excel files or select from storage
+### 📊 **Excel Analysis Mode**
 
-2. **Start Chat Session**:
+1. **Upload Excel Files**: 
+   - Go to main Upload page
+   - Upload new Excel/CSV files or select from storage
+
+2. **Start Analysis Session**:
    - Select a sheet from your Excel file
    - Click "Start Session" to begin analysis
 
@@ -107,25 +118,53 @@ Frontend will be available at: http://localhost:5173
    - Type questions about your data in natural language
    - Examples: "What are the top 5 sales regions?", "Show me monthly trends"
 
+### 🤖 **Document Chat Mode (RAG)**
+
+1. **Upload Documents**:
+   - Go to "RAG Upload" page
+   - Upload .txt, .docx, .pdf files or choose from existing files
+
+2. **Start Document Chat**:
+   - Click "Start Chat" on any uploaded document
+   - Create a new chat session with custom name
+
+3. **Chat with Documents**:
+   - Ask questions about document content
+   - Examples: "What is the main topic?", "Summarize key points"
+
+### 📝 **Session Management**
+
 4. **Manage Sessions**:
-   - View past conversations in Sessions page
+   - View past conversations in respective Sessions pages
    - Continue previous chats by clicking on session history
-   - Delete sessions you no longer need
+   - Delete individual sessions or entire files with related sessions
 
 5. **File Management**:
    - View all uploaded files in Files page
    - Delete files to free up storage space
+   - Separate management for Excel files and RAG documents
 
 ## API Endpoints
 
-- `POST /api/upload` - Upload Excel file
-- `GET /api/files` - List uploaded files  
+### Excel Analysis APIs
+- `POST /api/upload` - Upload Excel/CSV file
+- `GET /api/files` - List uploaded Excel files  
 - `GET /api/files/{id}/info` - Get file info with sheet names
-- `DELETE /api/files/{id}` - Delete file
-- `POST /api/session` - Create chat session
-- `GET /api/sessions` - List chat sessions
-- `POST /api/session/{id}/ask` - Send question
-- `DELETE /api/session/{id}` - Delete session
+- `DELETE /api/files/{id}` - Delete Excel file
+- `POST /api/session` - Create Excel analysis session
+- `GET /api/sessions` - List Excel analysis sessions
+- `POST /api/session/{id}/ask` - Ask question about Excel data
+- `DELETE /api/session/{id}` - Delete Excel session
+
+### RAG Document APIs
+- `POST /api/rag/upload` - Upload document (.txt, .docx, .pdf)
+- `GET /api/rag/files` - List uploaded RAG documents
+- `DELETE /api/rag/file/{id}` - Delete RAG document and related sessions
+- `POST /api/rag/session` - Create RAG chat session
+- `GET /api/rag/sessions` - List RAG chat sessions
+- `POST /api/rag/session/{id}/ask` - Chat with document
+- `GET /api/rag/session/{id}/messages` - Get session messages
+- `DELETE /api/rag/session/{id}` - Delete RAG session
 
 ## Configuration
 
@@ -175,7 +214,8 @@ chat-with-your-excel/
 - Verify Node.js version
 
 **File Upload Issues**:
-- Only .xlsx and .xls files are supported
+- Excel mode: Only .xlsx, .xls, .csv files are supported
+- RAG mode: Only .txt, .docx, .pdf files are supported
 - Check file permissions and storage directory
 - Ensure files are not corrupted
 

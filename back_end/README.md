@@ -58,24 +58,31 @@ This backend provides APIs for:
 
 ### RAG System (Document Chat)
 - `POST /api/rag/upload`: Upload TXT/DOCX/PDF → `{ fileId, filename, message }`
-- `POST /api/rag/query`: Direct query → `{ fileId, question } → { answer }`
-- `POST /api/rag/session`: Create chat session
-- `POST /api/rag/session/{id}/ask`: Chat with document
+- `GET /api/rag/files`: List RAG documents → `[{ fileId, filename, size, uploadedAt, fileType }]`
+- `DELETE /api/rag/file/{fileId}`: Delete RAG file and related sessions
+- `POST /api/rag/session`: Create chat session → `{ sessionId, sessionName, fileId, filename }`
+- `GET /api/rag/sessions`: List RAG sessions
+- `POST /api/rag/session/{id}/ask`: Chat with document → `{ role, content, timestamp }`
+- `GET /api/rag/session/{id}/messages`: Get session message history
+- `DELETE /api/rag/session/{id}`: Delete RAG session
 
 ### File Management
-- `GET /api/files`: List uploaded files
-- `DELETE /api/files/{fileId}`: Delete file
-- `GET /api/sessions`: List sessions
-- `DELETE /api/session/{sessionId}`: Delete session
+- `GET /api/files`: List uploaded Excel files
+- `DELETE /api/files/{fileId}`: Delete Excel file
+- `GET /api/sessions`: List Excel analysis sessions  
+- `DELETE /api/session/{sessionId}`: Delete Excel session
 
 ## Features
 
 ✅ **Excel/CSV Support**: Upload and analyze tabular data with pandas agent  
 ✅ **Document Chat**: Upload and chat with text documents using RAG  
 ✅ **Session Management**: Persistent chat sessions with message history  
+✅ **Session Separation**: Isolated sessions for Excel vs RAG workflows
 ✅ **Vector Search**: Semantic search in documents using Google embeddings  
-✅ **Error Handling**: Retry logic for API quota limits  
-✅ **Logging**: Comprehensive request/response logging
+✅ **File Management**: Upload, list, and delete files with cascade cleanup
+✅ **Smart Deletion**: Delete files automatically removes related sessions and vector data
+✅ **Error Handling**: Retry logic for API quota limits and graceful error responses
+✅ **Logging**: Comprehensive request/response logging with structured output
 
 ## File Structure
 
