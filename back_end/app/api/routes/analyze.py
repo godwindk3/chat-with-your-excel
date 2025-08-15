@@ -38,16 +38,16 @@ def build_agent_for_file(file_path: str, sheet_name: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read sheet '{sheet_name}': {e}")
 
-    # Optional: read description sheet and inject into prefix
-    try:
-        with pd.ExcelFile(file_path) as xls:
-            if "Mô tả trường thông tin" in xls.sheet_names:
-                col_desc_df = pd.read_excel(file_path, sheet_name="Mô tả trường thông tin")
-                col_desc_str = col_desc_df.to_string(index=False)
-            else:
-                col_desc_str = None
-    except Exception:
-        col_desc_str = None
+    # Optional: read description sheet and inject into prefix (only for Excel files)
+    col_desc_str = None
+    if not file_path.lower().endswith(".csv"):
+        try:
+            with pd.ExcelFile(file_path) as xls:
+                if "Mô tả trường thông tin" in xls.sheet_names:
+                    col_desc_df = pd.read_excel(file_path, sheet_name="Mô tả trường thông tin")
+                    col_desc_str = col_desc_df.to_string(index=False)
+        except Exception:
+            col_desc_str = None
 
     model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=google_api_key)
 

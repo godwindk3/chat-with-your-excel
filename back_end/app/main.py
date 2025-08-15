@@ -9,6 +9,8 @@ from app.api.routes.upload import router as upload_router
 from app.api.routes.analyze import router as analyze_router
 from app.api.routes.session import router as session_router
 from app.api.routes.files import router as files_router
+from app.api.routes.rag import router as rag_router
+from app.api.routes.rag_session import router as rag_session_router
 
 # Setup logging first
 setup_logging()
@@ -53,6 +55,8 @@ def create_app() -> FastAPI:
     app.include_router(analyze_router, prefix="/api")
     app.include_router(session_router, prefix="/api")
     app.include_router(files_router, prefix="/api")
+    app.include_router(rag_router, prefix="/api")
+    app.include_router(rag_session_router, prefix="/api")
 
     @app.get("/health")
     def health_check():

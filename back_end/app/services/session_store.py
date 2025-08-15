@@ -9,12 +9,13 @@ def _session_path(session_id: str) -> str:
     return os.path.join(settings.storage_dir, f"session_{session_id}.json")
 
 
-def create_session_record(session_id: str, file_id: str, sheet_name: str, created_at: str) -> None:
+def create_session_record(session_id: str, file_id: str, sheet_name: str, created_at: str, session_type: str = "pandas") -> None:
     record = {
         "sessionId": session_id,
         "fileId": file_id,
         "sheetName": sheet_name,
         "createdAt": created_at,
+        "sessionType": session_type,  # "pandas" or "rag"
         "messages": [],
     }
     with open(_session_path(session_id), "w", encoding="utf-8") as f:
@@ -84,5 +85,36 @@ def delete_session(session_id: str) -> bool:
         return False
     except Exception:
         return False
+
+
+# Helper functions for the new session system
+def create_session(file_id: str, session_name: str, created_at: str, session_type: str = "pandas") -> str:
+    """Create a new session and return session ID"""
+    import uuid
+    session_id = str(uuid.uuid4())
+    
+    # For RAG sessions, we don't use sheet_name
+    sheet_name = session_name if session_type == "rag" else session_name
+    
+    create_session_record(session_id, file_id, sheet_name, created_at, session_type)
+    return session_id
+
+
+def get_all_sessions() -> List[Dict[str, Any]]:
+    """Get all sessions regardless of file"""
+    return list_sessions()
+
+
+def delete_session_record(session_id: str) -> bool:
+    """Delete a session record"""
+    return delete_session(session_id)
+
+
+def get_session_messages(session_id: str) -> List[Dict[str, Any]]:
+    """Get all messages for a session"""
+    rec = get_session_record(session_id)
+    if rec is None:
+        return []
+    return rec.get("messages", [])
 
 

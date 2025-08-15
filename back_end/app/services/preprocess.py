@@ -150,7 +150,13 @@ def infer_and_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def read_and_preprocess_sheet(file_path: str, sheet_name: str) -> pd.DataFrame:
-    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    """Read and preprocess sheet from Excel or CSV file"""
+    if file_path.lower().endswith(".csv"):
+        # For CSV files, ignore sheet_name parameter
+        df = pd.read_csv(file_path)
+    else:
+        # For Excel files
+        df = pd.read_excel(file_path, sheet_name=sheet_name)
     return infer_and_clean_dataframe(df)
 
 

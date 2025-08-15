@@ -20,9 +20,9 @@ async def upload_excel(file: UploadFile = File(...)) -> dict:
     logger.info(f"📤 UPLOAD FILE REQUEST")
     logger.info(f"   Original filename: {filename}")
     
-    if not filename.lower().endswith((".xlsx", ".xls")):
+    if not filename.lower().endswith((".xlsx", ".xls", ".csv")):
         logger.error(f"   ❌ Invalid file extension: {filename}")
-        raise HTTPException(status_code=400, detail="Only .xlsx or .xls files are supported")
+        raise HTTPException(status_code=400, detail="Only .xlsx, .xls, or .csv files are supported")
 
     file_id = str(uuid.uuid4())
     saved_path = os.path.join(settings.storage_dir, f"{file_id}_{filename}")
@@ -53,22 +53,29 @@ async def upload_excel(file: UploadFile = File(...)) -> dict:
     actual_size = os.path.getsize(saved_path)
     logger.info(f"   ✅ File verification passed, size: {actual_size} bytes")
     
-    # Read sheet names
+    # Read sheet names (for Excel) or validate CSV
     try:
-        logger.info(f"   📊 Reading Excel sheets...")
-        with pd.ExcelFile(saved_path) as xls:
-            sheet_names: List[str] = xls.sheet_names
-            logger.info(f"   Found {len(sheet_names)} sheets: {sheet_names}")
-        logger.info(f"   ✅ Excel file processed successfully")
+        if filename.lower().endswith(".csv"):
+            logger.info(f"   📊 Validating CSV file...")
+            # For CSV, just validate it can be read and return a single "sheet"
+            pd.read_csv(saved_path, nrows=1)  # Just read first row to validate
+            sheet_names: List[str] = ["Sheet1"]  # CSV files have one "sheet"
+            logger.info(f"   ✅ CSV file validated successfully")
+        else:
+            logger.info(f"   📊 Reading Excel sheets...")
+            with pd.ExcelFile(saved_path) as xls:
+                sheet_names: List[str] = xls.sheet_names
+                logger.info(f"   Found {len(sheet_names)} sheets: {sheet_names}")
+            logger.info(f"   ✅ Excel file processed successfully")
     except Exception as e:
-        logger.error(f"   ❌ Error reading Excel file: {e}")
+        logger.error(f"   ❌ Error reading file: {e}")
         # Cleanup invalid file
         try:
             os.remove(saved_path)
             logger.info(f"   🗑️ Cleaned up invalid file")
         except Exception as cleanup_e:
             logger.error(f"   ❌ Error cleaning up file: {cleanup_e}")
-        raise HTTPException(status_code=400, detail=f"Failed to read Excel file: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {e}")
 
     logger.info(f"   🎉 Upload completed successfully")
     logger.info("="*60)

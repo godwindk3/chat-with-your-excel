@@ -1,34 +1,111 @@
-Run backend
+# Backend - Excel & Document Analysis API
 
-1. Create and activate a virtual environment
-2. pip install -r requirements.txt
-3. Configure GOOGLE_API_KEY (one of the following):
-   - Using .env file (recommended): create a file named `.env` in this folder with:
-     
-     GOOGLE_API_KEY=YOUR_API_KEY
-     
-     `.env` is automatically loaded on startup.
-   - Or set environment variable directly (PowerShell):
-     
-     $env:GOOGLE_API_KEY="YOUR_API_KEY"
-     
-   - Or set environment variable directly (cmd):
-     
-     set GOOGLE_API_KEY=YOUR_API_KEY
-     
-4. Run server:
+This backend provides APIs for:
+- **Pandas Agent**: Upload and analyze Excel/CSV files using natural language
+- **RAG System**: Upload and chat with documents (TXT, DOCX, PDF)
+
+## Setup
+
+1. **Create and activate virtual environment**
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   source .venv/bin/activate  # Linux/Mac
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure GOOGLE_API_KEY** (one of the following):
    
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   **Option A: Using .env file (recommended)**
+   Create `.env` file in this folder:
+   ```
+   GOOGLE_API_KEY=YOUR_API_KEY
+   ```
+   
+   **Option B: Environment variable**
+   ```bash
+   # PowerShell
+   $env:GOOGLE_API_KEY="YOUR_API_KEY"
+   
+   # CMD
+   set GOOGLE_API_KEY=YOUR_API_KEY
+   ```
 
-Environment variables
+4. **Run server**
+   ```bash
+   python -m uvicorn app.main:app --reload
+   # or
+   python start_with_logs.py
+   ```
 
-- GOOGLE_API_KEY: Required
-- FRONTEND_ORIGIN: Optional CORS origin
-- STORAGE_DIR: Optional storage path
+## Environment Variables
 
-API
+- `GOOGLE_API_KEY`: **Required** - Google Gemini API key
+- `FRONTEND_ORIGIN`: Optional CORS origin (default: http://localhost:5173)
+- `STORAGE_DIR`: Optional storage path (default: ./storage)
 
-- POST /api/upload: multipart form-data file -> { fileId, sheetNames }
-- POST /api/analyze: { fileId, sheetName, question } -> { output }
+## API Endpoints
 
+### Pandas Agent (Excel/CSV Analysis)
+- `POST /api/upload`: Upload Excel/CSV → `{ fileId, filename, sheetNames }`
+- `POST /api/analyze`: Analyze data → `{ fileId, sheetName, question } → { output }`
+- `POST /api/session`: Create analysis session
+- `POST /api/session/{id}/ask`: Ask questions in session
 
+### RAG System (Document Chat)
+- `POST /api/rag/upload`: Upload TXT/DOCX/PDF → `{ fileId, filename, message }`
+- `POST /api/rag/query`: Direct query → `{ fileId, question } → { answer }`
+- `POST /api/rag/session`: Create chat session
+- `POST /api/rag/session/{id}/ask`: Chat with document
+
+### File Management
+- `GET /api/files`: List uploaded files
+- `DELETE /api/files/{fileId}`: Delete file
+- `GET /api/sessions`: List sessions
+- `DELETE /api/session/{sessionId}`: Delete session
+
+## Features
+
+✅ **Excel/CSV Support**: Upload and analyze tabular data with pandas agent  
+✅ **Document Chat**: Upload and chat with text documents using RAG  
+✅ **Session Management**: Persistent chat sessions with message history  
+✅ **Vector Search**: Semantic search in documents using Google embeddings  
+✅ **Error Handling**: Retry logic for API quota limits  
+✅ **Logging**: Comprehensive request/response logging
+
+## File Structure
+
+```
+app/
+├── main.py              # FastAPI application
+├── core/
+│   ├── config.py        # Configuration settings
+│   └── logging_config.py # Logging setup
+├── api/routes/
+│   ├── upload.py        # File upload endpoints
+│   ├── analyze.py       # Pandas analysis endpoints
+│   ├── session.py       # Session management
+│   ├── files.py         # File management
+│   ├── rag.py           # RAG upload/query endpoints
+│   └── rag_session.py   # RAG session management
+└── services/
+    ├── storage.py       # File storage utilities
+    ├── preprocess.py    # Data preprocessing
+    ├── session_store.py # Session persistence
+    └── rag_service.py   # RAG processing service
+```
+
+## Supported File Types
+
+**Pandas Agent:**
+- `.xlsx`, `.xls` (Excel files)
+- `.csv` (Comma-separated values)
+
+**RAG System:**
+- `.txt` (Text files)
+- `.docx` (Word documents)  
+- `.pdf` (PDF documents)
