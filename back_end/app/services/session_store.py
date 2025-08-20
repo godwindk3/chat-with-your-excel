@@ -33,16 +33,19 @@ def get_session_record(session_id: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def append_message(session_id: str, role: str, content: str, timestamp: str) -> None:
+def append_message(session_id: str, role: str, content: str, timestamp: str, trace: str | None = None) -> None:
     path = _session_path(session_id)
     rec = get_session_record(session_id)
     if rec is None:
         return
-    rec.setdefault("messages", []).append({
+    message = {
         "role": role,
         "content": content,
         "timestamp": timestamp,
-    })
+    }
+    if trace:
+        message["trace"] = trace
+    rec.setdefault("messages", []).append(message)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(rec, f, ensure_ascii=False, indent=2)
 

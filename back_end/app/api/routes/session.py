@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from app.services.storage import find_file_by_id
 from app.api.routes.analyze import build_agent_for_file
+from app.services.callbacks import TranscriptCallbackHandler
 from app.services.session_store import (
     create_session_record,
     get_session_record,
@@ -40,6 +41,7 @@ class Message(BaseModel):
     role: str
     content: str
     timestamp: str
+    trace: str | None = None
 
 
 class HistoryResponse(BaseModel):
@@ -132,8 +134,9 @@ def ask(session_id: str, req: AskRequest):
 
     # Run analysis
     agent = build_agent_for_file(file_path, sheet_name)
+    tracer = TranscriptCallbackHandler()
     try:
-        response = agent.invoke(req.question)
+        response = agent.invoke(req.question, config={"callbacks": [tracer]})
         output = response.get("output") if isinstance(response, dict) else str(response)
     except Exception as e:
         error_msg = str(e).lower()
@@ -143,7 +146,7 @@ def ask(session_id: str, req: AskRequest):
             raise HTTPException(status_code=500, detail=f"Analysis failed: {e}. Please try again.")
 
     now2 = datetime.now(timezone.utc).isoformat()
-    append_message(session_id, role="assistant", content=output, timestamp=now2)
-    return Message(role="assistant", content=output, timestamp=now2)
+    append_message(session_id, role="assistant", content=output, timestamp=now2, trace=tracer.get_transcript())
+    return Message(role="assistant", content=output, timestamp=now2, trace=tracer.get_transcript())
 
 

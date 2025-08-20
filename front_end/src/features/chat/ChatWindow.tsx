@@ -96,7 +96,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           <div className="chat">
             {messages.map((m, idx) => (
               <div key={idx} className={`messageRow ${m.role}`}>
-                <div className={`bubble ${m.role}`}>{m.content}</div>
+                <div className={`bubble ${m.role}`}>
+                  {m.content}
+                  {m.role === 'assistant' && m.trace && (
+                    <details style={{ marginTop: 8 }}>
+                      <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--muted)' }}>Show steps</summary>
+                      <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, marginTop: 6 }}>{m.trace}</pre>
+                    </details>
+                  )}
+                </div>
               </div>
             ))}
             {loading && (

@@ -11,6 +11,7 @@ from langchain_experimental.agents import create_pandas_dataframe_agent
 from app.core.config import settings
 from app.services.storage import find_file_by_id
 from app.services.preprocess import read_and_preprocess_sheet
+from app.services.callbacks import TranscriptCallbackHandler
 
 
 router = APIRouter(tags=["analyze"])
@@ -24,6 +25,7 @@ class AnalyzeRequest(BaseModel):
 
 class AnalyzeResponse(BaseModel):
     output: str
+    trace: Optional[str] = None
 
 
 def build_agent_for_file(file_path: str, sheet_name: str):
@@ -84,14 +86,15 @@ def analyze(req: AnalyzeRequest):
         raise HTTPException(status_code=404, detail="File not found")
 
     agent = build_agent_for_file(file_path, req.sheetName)
+    tracer = TranscriptCallbackHandler()
     
     # Retry logic for quota exceeded errors
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            response = agent.invoke(req.question)
+            response = agent.invoke(req.question, config={"callbacks": [tracer]})
             output = response.get("output") if isinstance(response, dict) else str(response)
-            return AnalyzeResponse(output=output)
+            return AnalyzeResponse(output=output, trace=tracer.get_transcript())
         except Exception as e:
             error_msg = str(e).lower()
             
